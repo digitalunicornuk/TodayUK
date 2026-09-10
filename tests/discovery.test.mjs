@@ -1,0 +1,24 @@
+import {PGlite} from '@electric-sql/pglite';
+import {readFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const db=new PGlite();
+const W='10000000-0000-4000-8000-000000000001',U='30000000-0000-4000-8000-000000000001',V='30000000-0000-4000-8000-000000000002';
+await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;`);
+for(const f of ['supabase/migrations/20260910130000_platform_core.sql','supabase/seed.sql','supabase/migrations/20260910170000_discovery.sql'])await db.exec(await readFile(f,'utf8'));
+await db.exec(`insert into auth.users values('${U}'),('${V}');insert into workspace_members(workspace_id,user_id,role) values('${W}','${U}','owner'),('${W}','${V}','viewer');`);
+async function denied(sql,code){await assert.rejects(db.exec(sql),e=>e.code===code);}
+await db.exec('set role anon');await denied('select * from incoming_stories','42501');
+await db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${V}',false)`);
+assert.equal((await db.query('select * from news_sources')).rows.length,1);
+const insert=`insert into incoming_stories(workspace_id,title,original_text,original_payload,fingerprint,intake_kind) values('${W}','Test','Retained original','{}','same-story','tip')`;
+await denied(insert,'42501');
+await db.exec(`select set_config('request.jwt.claim.sub','${U}',false)`);await db.exec(insert);await denied(insert,'23505');
+await db.exec("update incoming_stories set status='shortlisted'");
+assert.equal((await db.query('select status from incoming_stories')).rows[0].status,'shortlisted');
+await denied("update incoming_stories set original_text='overwritten'",'42501');
+await denied("delete from incoming_stories",'42501');
+await denied("update incoming_stories set status='published'",'23514');
+await db.exec(`select set_config('request.jwt.claim.sub','${V}',false)`);assert.equal((await db.query("update incoming_stories set status='dismissed' returning id")).rows.length,0);
+await db.exec("select set_config('request.jwt.claim.sub','40000000-0000-4000-8000-000000000001',false)");assert.equal((await db.query('select * from incoming_stories')).rows.length,0);
+await db.exec('reset role');assert.equal((await db.query("select count(*)::int n from audit_events where entity_table='incoming_stories' and actor_id='"+U+"'")).rows[0].n,2);
+console.log('Discovery database checks passed: isolation, roles, immutable originals, duplicates, triage and audits.');await db.close();

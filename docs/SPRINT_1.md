@@ -1,4 +1,4 @@
-# Sprint 1 — in progress
+# Sprint 1 — foundation verified
 
 ## Completed
 - Sites newsroom foundation source, saved in digitalunicornuk/TodayUK.
@@ -11,11 +11,11 @@
 - Migration and seed executed through the logged-in Supabase SQL editor after local PostgreSQL tests. Applied version recorded in newsroom_private.applied_migrations. Supabase CLI history is not initialized; reconcile this applied version before first CLI database push.
 - 26 embedded PostgreSQL tests pass. GitHub Linux build and TypeScript checks passed on initial source; each subsequent push is validated again.
 
-## Remaining acceptance criteria
-- Establish the first newsroom owner account and connect app authentication to workspace membership.
-- Connect authenticated application reads and mutations. The current preview uses a clearly labelled verified snapshot, not live database reads.
-- Validate the actual authenticated browser flow and live Supabase role allow/deny behaviour.
-- Add workflow enforcement as backend modules are implemented; switches currently default off.
+## Live verification
+- Passwordless sign-in and owner membership verified in the hosted newsroom on 10 September 2026.
+- Live workspace reads display CR News, eight districts, tags and audit activity.
+- Callback cookies are attached explicitly to the redirect response; resend cooldown and visible authentication errors added.
+- Discovery mutations and audit coverage continue in Sprint 2.
 
 ## Build environment
 Mac native build tools stall during startup. Dependency installation without setup scripts permits TypeScript and embedded PostgreSQL checks. Linux GitHub Actions performs the complete build. No system-wide macOS security settings were changed.
@@ -35,4 +35,4 @@ Updated React, Vinext, Vite and Cloudflare tools to patched compatible releases.
 ## Live connection implementation
 Added passwordless Supabase sign-in using the official SSR client, a fixed same-site PKCE callback, and a live newsroom read endpoint. The endpoint verifies the Supabase user before querying workspace membership and data; it never uses a service-role key. Database policies remain the authority for workspace access. User tokens are refreshed through the SSR cookie adapter; newsroom responses are private/no-store.
 
-Owner provisioning and the allowed Supabase callback must be completed before end-to-end sign-in validation. No owner email or privileged key is committed to source.
+Owner provisioning and the allowed Supabase callback are complete. No owner email or privileged key is committed to source.
