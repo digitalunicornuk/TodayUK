@@ -1,10 +1,11 @@
 # TodayUK Publishing OS
 
-Sprint 1 foundation in progress. Private Sites preview with Supabase migration drafts.
+Sprint 1 foundation in progress. Private Sites newsroom preview and Supabase platform core.
 
-See docs/SPRINT_1.md for tested status and remaining acceptance criteria.
+See docs/SPRINT_1.md for verified status and remaining acceptance criteria.
 
-The preview is not connected to Supabase yet. Do not interpret the planned hierarchy as live database records.
+The preview uses a labelled database snapshot. Supabase schema and CR seed are applied; app authentication and live reads remain in progress.
 
-Development: npm install, npm run dev. Validation: npm run build.
-Never commit environment files or credentials. Supabase migrations must pass development database permission tests before production use.
+Development: npm ci, npm run dev. Checks: npm test, npx tsc --noEmit, npm run build.
+
+GitHub Actions validates changes on Linux. Never commit credentials or environment files.

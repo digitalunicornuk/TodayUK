@@ -115,4 +115,12 @@ create trigger hierarchy_no_cycles before insert or update on public.hierarchy_n
 create table newsroom_private.applied_migrations(version text primary key, applied_at timestamptz not null default now());
 revoke all on newsroom_private.applied_migrations from public,anon,authenticated;
 insert into newsroom_private.applied_migrations(version) values('20260910130000_platform_core');
+alter table public.workspaces enable row level security;
+alter table public.workspace_members enable row level security;
+alter table public.hierarchy_nodes enable row level security;
+alter table public.tags enable row level security;
+alter table public.node_tags enable row level security;
+alter table public.module_config enable row level security;
+alter table public.audit_events enable row level security;
+alter table newsroom_private.applied_migrations enable row level security;
 commit;

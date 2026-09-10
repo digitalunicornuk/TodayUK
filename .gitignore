@@ -39,3 +39,5 @@ next-env.d.ts
 
 # Product blueprint is retained locally, not published to a public repository.
 docs/TodayUK_Master_Blueprint_V1.docx
+
+*.tsbuildinfo
