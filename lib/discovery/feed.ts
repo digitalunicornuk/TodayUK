@@ -21,7 +21,7 @@ export function parseFeed(xml:string){
 }
 export async function fetchFeed(url:string){
  if(url!==approvedFeed)throw new Error('This RSS address has not been approved for fetching.');
- const response=await fetch(url,{redirect:'error',signal:AbortSignal.timeout(15000),headers:{Accept:'application/rss+xml, application/xml'}});
+ const response=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(15000),headers:{Accept:'application/rss+xml, application/xml'}});
  if(!response.ok||!response.body)throw new Error('The source could not be reached. Try again later.');
  const reader=response.body.getReader();const parts:Uint8Array[]=[];let length=0;
  try{while(true){const {done,value}=await reader.read();if(done)break;length+=value.length;if(length>2000000)throw new Error('The feed exceeds the 2 MB import limit.');parts.push(value);}}finally{await reader.cancel();}
