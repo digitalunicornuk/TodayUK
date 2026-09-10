@@ -31,3 +31,8 @@ WordPress access and CR URL structure are needed for Sprint 5.
 
 ## Dependency maintenance
 Updated React, Vinext, Vite and Cloudflare tools to patched compatible releases. Pinned sharp 0.35.4 through an override for the Cloudflare image dependency. npm audit reports zero vulnerabilities after the update; Linux CI validates the resulting build.
+
+## Live connection implementation
+Added passwordless Supabase sign-in using the official SSR client, a fixed same-site PKCE callback, and a live newsroom read endpoint. The endpoint verifies the Supabase user before querying workspace membership and data; it never uses a service-role key. Database policies remain the authority for workspace access. User tokens are refreshed through the SSR cookie adapter; newsroom responses are private/no-store.
+
+Owner provisioning and the allowed Supabase callback must be completed before end-to-end sign-in validation. No owner email or privileged key is committed to source.
