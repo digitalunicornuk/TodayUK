@@ -26,3 +26,6 @@ Reference implementation guidance: https://supabase.com/docs/guides/database/pos
 ## Next vertical slice
 Croydon Council RSS -> retained original item -> proof/risk decision -> editorial draft -> approved WordPress publication -> managed live content.
 WordPress credentials and CR URL structure are needed for Sprint 5, not to start Sprint 1.
+
+## Validation blocker
+Dependency installation failed twice: the esbuild executable was terminated with SIGKILL during its install check. The build cannot run because installation did not finish (vinext unavailable); TypeScript validation is also unavailable. No private deployment was attempted. The Sites project is registered and must be reused on resume.

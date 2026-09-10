@@ -81,5 +81,38 @@ do $$declare t text;begin
  execute format('create trigger audit_changes after insert or update or delete on public.%I for each row execute function newsroom_private.audit_change()',t);
  end loop;
 end;$$;
+-- Workspace ownership is immutable even for editors in both workspaces.
+create function newsroom_private.guard_workspace() returns trigger language plpgsql set search_path = '' as $$
+begin
+ if NEW.workspace_id is distinct from OLD.workspace_id then
+ raise exception 'Workspace ownership cannot be changed' using errcode='23514';
+ end if;
+ return NEW;
+end;$$;
+revoke all on function newsroom_private.guard_workspace() from public;
+do $$declare t text;begin
+ foreach t in array array['hierarchy_nodes','tags','node_tags','module_config','workspace_members'] loop
+ execute format('create trigger immutable_workspace before update on public.%I for each row execute function newsroom_private.guard_workspace()',t);
+ end loop;
+end;$$;
+-- Tree structure changes are backend-only, avoiding concurrent client reparent cycles.
+revoke update on public.hierarchy_nodes from authenticated;
+grant update(name) on public.hierarchy_nodes to authenticated;
+create function newsroom_private.guard_hierarchy() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+ if NEW.parent_id is not null and exists (
+ with recursive ancestors as (
+ select id,parent_id from public.hierarchy_nodes where id=NEW.parent_id and workspace_id=NEW.workspace_id
+ union
+ select n.id,n.parent_id from public.hierarchy_nodes n join ancestors a on n.id=a.parent_id where n.workspace_id=NEW.workspace_id
+ ) select 1 from ancestors where id=NEW.id
+ ) then raise exception 'Hierarchy cycle is not allowed' using errcode='23514'; end if;
+ return NEW;
+end;$$;
+revoke all on function newsroom_private.guard_hierarchy() from public;
+create trigger hierarchy_no_cycles before insert or update on public.hierarchy_nodes for each row execute function newsroom_private.guard_hierarchy();
 -- Clients cannot alter/delete audits, memberships or module switches.
+create table newsroom_private.applied_migrations(version text primary key, applied_at timestamptz not null default now());
+revoke all on newsroom_private.applied_migrations from public,anon,authenticated;
+insert into newsroom_private.applied_migrations(version) values('20260910130000_platform_core');
 commit;
