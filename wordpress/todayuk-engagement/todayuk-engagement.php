@@ -36,7 +36,7 @@ function tue_config($id){
  if(empty($c['question'])||count($c['options'])<2)$c['tools']=array_diff($c['tools'],array('poll'));
  foreach(array('area','topic','org') as $k)if(empty($c[$k]))$c['tools']=array_diff($c['tools'],array('follow_'.$k));
  if(empty($c['event_date']))$c['tools']=array_diff($c['tools'],array('remind'));
- return $c;
+ return apply_filters('todayuk_engagement_config',$c,$id);
 }
 function tue_scope($id,$tool,$c){
  $subject=(strpos($tool,'follow_')===0)?strtolower($c[substr($tool,7)]):strval($id);
