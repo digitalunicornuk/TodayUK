@@ -1,0 +1,4 @@
+import {articleHtml,type WordPressPost} from '../wordpress/client';
+export async function fingerprint(post:WordPressPost){if(typeof post.title?.raw!=='string'||typeof post.content?.raw!=='string')throw Error('WordPress did not return editable content.');const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([post.title.raw,post.content.raw,post.status])));return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');}
+export function matches(post:WordPressPost,headline:string,body:string){return post.title?.raw===headline&&post.content?.raw?.trim()===articleHtml(body).trim();}
+export function monitorMessage(post:WordPressPost,current:string,baseline:string|null){return post.status!=='publish'?'Attention: WordPress status is '+post.status+'.':baseline&&baseline!==current?'Changed in WordPress. Review the live article before updating.':'Live on WordPress. No content change detected.';}

@@ -1,5 +1,5 @@
 export type WordPressConfig={url:string;username:string;password:string};
-export type WordPressPost={id:number;link:string;status:string;modified_gmt:string};
+export type WordPressPost={id:number;link:string;status:string;modified_gmt:string;title?:{raw?:string};content?:{raw?:string}};
 export function wordpressConfig(env:Record<string,string|undefined>=process.env):WordPressConfig|null{
  const {WORDPRESS_URL:url,WORDPRESS_USERNAME:username,WORDPRESS_APPLICATION_PASSWORD:password}=env;
  if(!url||!username||!password)return null;
@@ -31,5 +31,6 @@ export class WordPressClient{
  private post(value:unknown){const p=value as WordPressPost;if(!Number.isInteger(p?.id)||p.id<=0||typeof p.link!=='string'||!['draft','pending','publish','private','future'].includes(p.status))throw Error('WordPress returned an invalid post. Check the site before retrying.');const link=new URL(p.link);if(link.protocol!=='https:'||link.origin!==new URL(this.config.url).origin)throw Error('WordPress returned an unexpected post address.');return p;}
  async createDraft(id:string,headline:string,body:string){if(!/^[0-9a-f-]{36}$/i.test(id)||!headline.trim()||!body.trim())throw Error('The approved draft is incomplete.');const categories=await this.request('categories?slug=cr-news') as Array<{id:number;slug:string}>;const category=Array.isArray(categories)?categories.find(c=>c.slug==='cr-news'&&Number.isSafeInteger(c.id)&&c.id>0):undefined;if(!category)throw Error('Create the CR News category in WordPress before sending this story.');return this.post(await this.request('posts',{categories:[category.id],title:headline,content:articleHtml(body),status:'draft',slug:'todayuk-'+id,comment_status:'closed',ping_status:'closed'}));}
  async read(id:number){if(!Number.isSafeInteger(id)||id<1)throw Error('Invalid WordPress post.');return this.post(await this.request('posts/'+id+'?context=edit'));}
+ async update(id:number,headline:string,body:string){if(!Number.isSafeInteger(id)||id<1||!headline.trim()||!body.trim())throw Error('Invalid article update.');return this.post(await this.request('posts/'+id,{title:headline,content:articleHtml(body)}));}
  async publish(id:number){if(!Number.isSafeInteger(id)||id<1)throw Error('Invalid WordPress post.');return this.post(await this.request('posts/'+id,{status:'publish'}));}
 }
