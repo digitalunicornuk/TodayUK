@@ -29,3 +29,6 @@ body{font-size:16px}.strap{font-size:12px}.nav,.near-link,.panel-title a,.view-a
 
 /* Keep portrait uploads within the story thumbnail, independently of HTML height attributes. */
 .card img{height:auto;aspect-ratio:16/9;object-fit:cover;object-position:center}.cards{align-items:start}.card{min-width:0}
+
+.section-columns{display:block}.section-story-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}.section-story-grid .card img{width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}.section-story-grid .card h2{font-size:24px;line-height:1.22}.section-ad-row{grid-column:1/-1}.section-shell>.ad-placement{margin:24px 0}.section-story-grid .card{height:auto}
+@media(max-width:900px){.section-story-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:580px){.section-story-grid{grid-template-columns:1fr}}
