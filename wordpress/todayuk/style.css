@@ -2,7 +2,7 @@
 Theme Name: TodayUK
 Author: Digital Unicorn
 Description: TodayUK local newsroom: publication hubs, topic sections and postcode coverage.
-Version: 1.3.0
+Version: 1.3.1
 Requires at least: 6.5
 Requires PHP: 8.0
 Text Domain: todayuk
@@ -26,3 +26,6 @@ body{background:#f5fafd;color:#09173b;font-size:15px}.wrap{max-width:1120px}.sit
 /* Readable network controls and small-screen layout. */
 body{font-size:16px}.strap{font-size:12px}.nav,.near-link,.panel-title a,.view-all,.feature-tile small,.map-card small,.map-card p,.footer-links,.newsletter p{font-size:14px}.map-label,.map-caption,.ad-label,.latest-row small,.latest-row time{font-size:12px}.map-area-buttons{position:absolute;bottom:25px;left:0;display:flex;flex-wrap:wrap;gap:6px;z-index:4;max-width:100%}.map-area-buttons button{font-size:14px;padding:8px 10px;border-radius:5px;background:white;color:#153c78;border:1px solid #99b5d6}.map-area-buttons button[aria-pressed=true]{background:#153c78;color:white}.map-card{top:72%;left:45%}.map-caption{bottom:0;max-width:100%}.gam-slot{max-width:100%;overflow:hidden}.gam-slot:empty{display:none}.house-ad[hidden],.gam-slot[hidden]{display:none!important}.map-area-buttons button:focus-visible{outline:3px solid #f2a900}.latest-row h3{font-size:16px}.newsletter .button{margin-top:12px}
 @media(max-width:700px){.discovery-layout,.bottom-grid{grid-template-columns:1fr}.map-panel{min-height:470px}.map-card{top:64%;left:48%;width:170px}.map-label{font-size:12px}.map-area-buttons{bottom:40px}.map-caption{font-size:12px}.nav{font-size:14px}.masthead .strap{font-size:12px;letter-spacing:0}.feature-tiles,.popular-grid,.coverage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.feature-tile strong,.feature-tile small,.coverage-grid span,.coverage-grid small,.newsletter h2,.newsletter p,.latest-row h3,.latest-row small{font-size:14px}.area-search{flex-wrap:wrap;gap:8px}.area-search input{font-size:16px;flex-basis:60%}.area-search button{font-size:14px}.area-search .location-button{font-size:14px}.latest-row{grid-template-columns:1fr 66px}.map-panel .uk-map{height:450px}.map-caption{max-width:100%}.near-link{font-size:14px}}
+
+/* Keep portrait uploads within the story thumbnail, independently of HTML height attributes. */
+.card img{height:auto;aspect-ratio:16/9;object-fit:cover;object-position:center}.cards{align-items:start}.card{min-width:0}

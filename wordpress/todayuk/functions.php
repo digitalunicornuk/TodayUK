@@ -5,7 +5,7 @@ add_action('after_setup_theme', function () {
  add_theme_support('responsive-embeds'); add_theme_support('html5', ['search-form','gallery','caption','style','script']);
  register_nav_menus(['primary'=>'Main navigation']);
 });
-add_action('wp_enqueue_scripts', function () { wp_enqueue_style('todayuk', get_stylesheet_uri(), [], '1.3.0'); });
+add_action('wp_enqueue_scripts', function () { wp_enqueue_style('todayuk', get_stylesheet_uri(), [], '1.3.1'); });
 function todayuk_sections() { return ['local-news'=>'Local news','planning'=>'Planning','whats-on'=>"What’s on",'business'=>'Business','schools'=>'Schools','sport'=>'Sport']; }
 function todayuk_category_url($slug) { $modules=['planning'=>'planning','whats-on'=>'event','directory'=>'directory','business'=>'business','schools'=>'schools','sport'=>'sport','lost-found'=>'lost','free-stuff'=>'free','community'=>'news']; if(function_exists('tuc_url')&&isset($modules[$slug]))return add_query_arg('section',$modules[$slug],tuc_url('local'));  $term=get_category_by_slug($slug); return $term ? get_category_link($term) : home_url('/?category_name='.rawurlencode($slug)); }
 function todayuk_card($lead=false) { ?>
