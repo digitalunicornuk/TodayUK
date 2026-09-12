@@ -26,7 +26,7 @@ export async function POST(request:Request){
    const fields={headline,alternative,reader_value,reporting_questions};const existing=await db.from('story_pitches').select('story_id').eq('workspace_id',w.id).eq('story_id',body.id).maybeSingle();if(existing.error)throw new Error('Could not load headline ideas.');const r=existing.data?await db.from('story_pitches').update(fields).eq('workspace_id',w.id).eq('story_id',body.id).select('story_id').single():await db.from('story_pitches').insert({workspace_id:w.id,story_id:body.id,...fields});if(r.error)throw new Error('Could not save the headline ideas.');return reply({message:'Headline ideas saved. Original source unchanged.'});
   }
   if(body.action==='research'||(body.action==='triage'&&body.status==='shortlisted')){
-   const {data:story,error:storyError}=await db.from('incoming_stories').select('id,title,status').eq('workspace_id',w.id).eq('id',body.id).single();
+   const {data:story,error:storyError}=await db.from('incoming_stories').select('id,title,status,original_text,original_url').eq('workspace_id',w.id).eq('id',body.id).single();
    if(storyError||!story)throw new Error('Could not find this story.');
    if(body.action==='research'&&story.status!=='shortlisted')return reply({error:'Shortlist this story first.'},400);
    const existing=await db.from('story_group_items').select('group_id').eq('workspace_id',w.id).eq('story_id',story.id).order('created_at').limit(1).maybeSingle();
@@ -46,7 +46,22 @@ export async function POST(request:Request){
     const updated=await db.from('incoming_stories').update({status:'shortlisted'}).eq('workspace_id',w.id).eq('id',story.id).select('id').single();
     if(updated.error)throw new Error('Research is prepared, but shortlisting failed. Please retry.');
    }
-   return reply({message:'Shortlisted. Your research file is ready.',group_id:groupId});
+   let draftId:string|undefined;
+   if(['owner','editor'].includes(role)){
+    const existingDraft=await db.from('editorial_drafts').select('id').eq('workspace_id',w.id).eq('group_id',groupId).order('updated_at',{ascending:false}).limit(1).maybeSingle();
+    if(existingDraft.error)throw new Error('Could not open the draft. Please retry.');
+    draftId=existingDraft.data?.id;
+    if(!draftId){
+     const heading=await db.from('story_groups').select('title').eq('workspace_id',w.id).eq('id',groupId).single();
+     if(heading.error)throw new Error('Could not load the draft headline.');
+     const sourceText=(story.original_text||'').replace(/\s*The post [\s\S]*? appeared first on [\s\S]*$/i,'').trim();
+     const body=sourceText+(story.original_url?'\n\nSource: '+story.original_url:'');
+     const created=await db.from('editorial_drafts').upsert({id:groupId,workspace_id:w.id,group_id:groupId,headline:heading.data.title,body,risk_notes:'Automatically prepared from retained source material. This is a source-based starter, not a verified or fully researched article. Check the full source, attribution, dates, completeness and rights before approval.'},{onConflict:'id',ignoreDuplicates:true});
+     if(created.error)throw new Error('Story shortlisted, but its draft could not be created. Click Continue story to retry.');
+     draftId=groupId;
+    }
+   }
+   return reply({message:draftId?'Draft ready. Opening your story…':'Shortlisted. Your research file is ready.',group_id:groupId,draft_id:draftId});
   }
   if(body.action==='triage'){
    if(!['new','shortlisted','dismissed'].includes(body.status))return reply({error:'Choose a valid queue status.'},400);
