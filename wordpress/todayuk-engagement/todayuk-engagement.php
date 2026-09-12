@@ -2,11 +2,12 @@
 /**
  * Plugin Name: TodayUK Engagement
  * Description: One configurable engine for article reactions, polls, follows and private reader responses.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: TodayUK
  */
 if (!defined('ABSPATH')) exit;
 require_once __DIR__.'/catalog.php';
+require_once __DIR__.'/readers.php';
 function tue_table(){global $wpdb; return $wpdb->prefix.'todayuk_engagement';}
 register_activation_hook(__FILE__,function(){
  global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';
@@ -90,7 +91,7 @@ add_filter('the_content',function($content){
  $uid=get_current_user_id();$table=tue_table();ob_start();
  echo '<section id="reader-engagement" class="tue"><h2>Have your say</h2>';
  if(isset($_GET['tue_saved']))echo '<p role="status">Your response has been saved.</p>';
- if(!$uid)echo '<p><a href="'.esc_url(wp_login_url(get_permalink($id).'#reader-engagement')).'">Sign in to take part</a>. Reading and sharing are open to everyone.</p>';
+ if(!$uid)echo '<p><a href="'.esc_url(tur_url()).'">Join or sign in to take part</a>. Reading and sharing are open to everyone.</p>';
  foreach($c['tools']as $tool){$spec=tue_catalog()[$tool];$kind=$spec[1];$scope=tue_scope($id,$tool,$c);
  $mine=$uid?$wpdb->get_row($wpdb->prepare("SELECT value FROM $table WHERE user_id=%d AND tool=%s AND scope=%s",$uid,$tool,$scope)):null;
  $label=$spec[0];if($tool==='poll')$label=$c['question'];if(strpos($tool,'follow_')===0)$label.=': '.$c[substr($tool,7)];
@@ -108,7 +109,7 @@ add_filter('the_content',function($content){
  if($tool==='track'||strpos($tool,'follow_')===0)echo '<p>'.($mine?'Saved to your reading list.':'Keep this in your reading list.').' Email and push alerts are not enabled.</p>';
  }
  echo $kind==='message'?'</details>':'</div>';}
- if($uid)echo '<p><a href="'.esc_url(admin_url('profile.php#tue-saved')).'">My saved stories and follows →</a></p>';
+ if($uid)echo '<p><a href="'.esc_url(tur_url().'#tur-saved').'">My saved stories and follows →</a></p>';
  echo '</section>';return $content.ob_get_clean();
 },30);
 add_action('wp_enqueue_scripts',function(){if(is_singular('post')){wp_enqueue_style('tue',plugins_url('style.css',__FILE__),array(),'1.0.0');wp_enqueue_script('tue',plugins_url('share.js',__FILE__),array(),'1.0.0',true);}});
