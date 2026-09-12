@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TodayUK Engagement
  * Description: One configurable engine for article reactions, polls, follows and private reader responses.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author: TodayUK
  */
 if (!defined('ABSPATH')) exit;
@@ -144,4 +144,20 @@ add_action('admin_post_tue_settings',function(){
  if(!current_user_can('edit_post',$id)||get_post_type($id)!=='post')wp_die('Not allowed.',403);
  update_post_meta($id,'_tue_config',tue_clean_config(wp_unslash((array)($_POST['tue']??array()))));
  wp_safe_redirect(add_query_arg(array('page'=>'todayuk-engagement','article'=>$id,'saved'=>1),admin_url('edit.php')));exit;
+});
+
+// The newsroom sends its approved choice with the draft, before publication.
+add_action('rest_api_init',function(){
+ register_rest_field('post','todayuk_engagement',array(
+  'get_callback'=>function($post){return tue_config($post['id']);},
+  'update_callback'=>function($value,$post){
+   if(!current_user_can('edit_post',$post->ID))return new WP_Error('rest_forbidden','Cannot edit this article.',array('status'=>403));
+   if(!is_array($value)||!in_array($value['mode']??'',array('custom','off'),true)||!is_array($value['options']??null))return new WP_Error('invalid_engagement','Invalid engagement configuration.',array('status'=>400));
+   $value['options']=implode("\n",$value['options']);
+   $clean=tue_clean_config($value);
+   if(in_array('poll',$clean['tools'],true)&&(empty($clean['question'])||count($clean['options'])<2))return new WP_Error('invalid_engagement','A poll needs a question and answers.',array('status'=>400));
+   update_post_meta($post->ID,'_tue_config',$clean);return true;
+  },
+  'schema'=>array('description'=>'Approved TodayUK engagement','type'=>'object','context'=>array('view','edit'),'additionalProperties'=>true)
+ ));
 });

@@ -1,3 +1,4 @@
+import {validateEngagement} from '@/lib/editorial/engagement';
 import {articleLengthError} from '@/lib/editorial/article';
 import {newsroomClient} from '@/lib/supabase/server';
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store'}});
@@ -9,7 +10,7 @@ export async function POST(request:Request){
  try{const raw=await request.text();if(raw.length>120000)return reply({error:'Draft is too large.'},413);const b=JSON.parse(raw);let r;const {db,w}=c;
  if(b.action==='create')r=await db.from('editorial_drafts').insert({workspace_id:w.id,group_id:b.group_id,headline:b.headline,body:''}).select('id,revision').single();
  else {let fields;
- if(b.action==='save')fields={headline:b.headline,body:b.body,risk_level:b.risk_level,risk_notes:b.risk_notes,facts_checked:b.facts_checked===true,harm_checked:b.harm_checked===true,rights_checked:b.rights_checked===true};
+ if(b.action==='save')fields={engagement:validateEngagement(b.engagement),headline:b.headline,body:b.body,risk_level:b.risk_level,risk_notes:b.risk_notes,facts_checked:b.facts_checked===true,harm_checked:b.harm_checked===true,rights_checked:b.rights_checked===true};
  else if(b.action==='transition'&&['draft','in_review','approved','changes_requested'].includes(b.status))fields={status:b.status,...(b.status==='approved'||b.status==='changes_requested'?{review_notes:String(b.review_notes??'')}: {})};
  else return reply({error:'Unknown editorial action.'},400);
  if(!Number.isInteger(b.revision))return reply({error:'Reload this draft before saving.'},400);
