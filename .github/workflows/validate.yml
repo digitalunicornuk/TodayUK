@@ -19,6 +19,8 @@ jobs:
       - run: node tests/discovery.test.mjs
       - run: node tests/feed.test.mjs
       - run: node tests/editorial.test.mjs
+      - run: node tests/wordpress.test.mjs
+      - run: node tests/publishing.test.mjs
       - run: npx tsc --noEmit
       - run: npm run build
       - uses: actions/upload-artifact@v4
