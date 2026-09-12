@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TodayUK Engagement
  * Description: One configurable engine for article reactions, polls, follows and private reader responses.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: TodayUK
  */
 if (!defined('ABSPATH')) exit;
@@ -121,7 +121,13 @@ function tue_calendar(){
 }
 add_action('admin_menu',function(){add_posts_page('Reader engagement','Reader engagement','edit_posts','todayuk-engagement','tue_admin');});
 function tue_admin(){
- global $wpdb;$table=tue_table();echo '<div class="wrap"><h1>Reader engagement</h1><p>Configure tools in each article’s Reader engagement box. AI selection is paused; automatic choices use story keywords. Private messages below are only available to editors with access to that article.</p>';
+ global $wpdb;$table=tue_table();echo '<div class="wrap"><h1>Reader engagement</h1><p>Choose an article below to configure its tools. AI selection is paused; automatic choices use story keywords. Private messages below are only available to editors with access to that article.</p>';
+ if(isset($_GET['saved']))echo '<div class="notice notice-success"><p>Engagement settings saved.</p></div>';
+ $selected=absint($_GET['article']??0);echo '<form method="get"><input type="hidden" name="page" value="todayuk-engagement"><label>Choose an article <select name="article"><option value="">Choose an article</option>';
+ foreach(get_posts(array('post_type'=>'post','post_status'=>array('publish','draft'),'numberposts'=>200)) as $article){if(current_user_can('edit_post',$article->ID))echo '<option value="'.absint($article->ID).'" '.selected($selected,$article->ID,false).'>'.esc_html($article->post_title).'</option>';}
+ echo '</select></label> <button class="button">Open settings</button></form>';
+ if($selected&&current_user_can('edit_post',$selected)&&get_post_type($selected)==='post'){echo '<h2>'.esc_html(get_the_title($selected)).'</h2><form method="post" action="'.esc_url(admin_url('admin-post.php')).'" style="max-width:850px;background:white;padding:20px;margin:20px 0"><input type="hidden" name="action" value="tue_settings"><input type="hidden" name="post_id" value="'.$selected.'">';tue_metabox(get_post($selected));echo '<button class="button button-primary">Save engagement settings</button></form>';}
+ echo '<h2>Reader responses</h2>';
  $rows=$wpdb->get_results("SELECT * FROM $table ORDER BY updated_at DESC LIMIT 200");
  echo '<table class="widefat striped"><thead><tr><th>Article / tool</th><th>Response</th><th>Reader</th><th>Status</th></tr></thead><tbody>';
  foreach($rows as $r){if(!current_user_can('edit_post',$r->post_id))continue;$user=get_userdata($r->user_id);echo '<tr><td><a href="'.esc_url(get_edit_post_link($r->post_id)).'">'.esc_html(get_the_title($r->post_id)).'</a><br>'.esc_html(tue_catalog()[$r->tool][0]??$r->tool).'</td><td>'.esc_html($r->value).'<br><small>'.esc_html($r->updated_at).' UTC</small></td><td>'.esc_html($user?$user->display_name:'Deleted account').'</td><td>'.esc_html($r->state);
@@ -132,3 +138,10 @@ function tue_admin(){
 add_action('admin_post_tue_resolve',function(){global $wpdb;$id=absint($_POST['id']??0);check_admin_referer('tue-resolve-'.$id);$r=$wpdb->get_row($wpdb->prepare('SELECT * FROM '.tue_table().' WHERE id=%d',$id));if(!$r||!current_user_can('edit_post',$r->post_id))wp_die('Not allowed.',403);$wpdb->update(tue_table(),array('state'=>$r->state==='open'?'handled':'open'),array('id'=>$id));wp_safe_redirect(admin_url('edit.php?page=todayuk-engagement'));exit;});
 add_action('show_user_profile',function($user){global $wpdb;echo '<h2 id="tue-saved">My saved stories and follows</h2><ul>';foreach($wpdb->get_results($wpdb->prepare('SELECT * FROM '.tue_table()." WHERE user_id=%d AND tool IN ('track','follow_area','follow_topic','follow_org') ORDER BY updated_at DESC",$user->ID))as $r){if(get_post_status($r->post_id)!=='publish')continue;echo '<li><a href="'.esc_url(get_permalink($r->post_id).'#reader-engagement').'">'.esc_html(get_the_title($r->post_id)).'</a> — '.esc_html(tue_catalog()[$r->tool][0]).'</li>';}echo '</ul><p>Open a story to remove a saved response. No email or push alerts are sent.</p>';});
 add_action('deleted_user',function($id){global $wpdb;$wpdb->delete(tue_table(),array('user_id'=>$id));});
+
+add_action('admin_post_tue_settings',function(){
+ $id=absint($_POST['post_id']??0);check_admin_referer('tue-config','tue_nonce');
+ if(!current_user_can('edit_post',$id)||get_post_type($id)!=='post')wp_die('Not allowed.',403);
+ update_post_meta($id,'_tue_config',tue_clean_config(wp_unslash((array)($_POST['tue']??array()))));
+ wp_safe_redirect(add_query_arg(array('page'=>'todayuk-engagement','article'=>$id,'saved'=>1),admin_url('edit.php')));exit;
+});
