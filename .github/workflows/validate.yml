@@ -22,6 +22,7 @@ jobs:
       - run: node tests/wordpress.test.mjs
       - run: node tests/publishing.test.mjs
       - run: node tests/publish-flow.test.mjs
+      - run: node tests/article-length.test.mjs
       - run: npx tsc --noEmit
       - run: npm run build
       - uses: actions/upload-artifact@v4

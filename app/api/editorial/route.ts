@@ -1,3 +1,4 @@
+import {articleLengthError} from '@/lib/editorial/article';
 import {newsroomClient} from '@/lib/supabase/server';
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store'}});
 async function context(){const db=await newsroomClient();if(!db)return null;const {data:{user}}=await db.auth.getUser();if(!user)return null;const {data:w}=await db.from('workspaces').select('id').eq('slug','todayuk').single();if(!w)return null;const {data:m}=await db.from('workspace_members').select('role').eq('workspace_id',w.id).eq('user_id',user.id).single();return {db,w,role:m?.role};}
@@ -12,6 +13,7 @@ export async function POST(request:Request){
  else if(b.action==='transition'&&['draft','in_review','approved','changes_requested'].includes(b.status))fields={status:b.status,...(b.status==='approved'||b.status==='changes_requested'?{review_notes:String(b.review_notes??'')}: {})};
  else return reply({error:'Unknown editorial action.'},400);
  if(!Number.isInteger(b.revision))return reply({error:'Reload this draft before saving.'},400);
+ if(b.action==='transition'&&['in_review','approved'].includes(b.status)){const {data:d,error}=await db.from('editorial_drafts').select('body').eq('workspace_id',w.id).eq('id',b.id).eq('revision',b.revision).single();if(error||!d)return reply({error:'This draft changed. Refresh before submitting.'},409);const lengthError=articleLengthError(d.body);if(lengthError)return reply({error:lengthError},409);}
  r=await db.from('editorial_drafts').update(fields).eq('workspace_id',w.id).eq('id',b.id).eq('revision',b.revision).select('id,revision').single();
  }
  if(r.error)return reply({error:r.error.code==='P0001'?r.error.message:'Could not save. Your role may not allow this action, or the draft changed. Refresh and try again.'},409);

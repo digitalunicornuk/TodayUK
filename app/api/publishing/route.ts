@@ -1,3 +1,4 @@
+import {articleLengthError} from '@/lib/editorial/article';
 import {newsroomClient} from '@/lib/supabase/server';
 import {WordPressClient,wordpressConfig} from '@/lib/wordpress/client';
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store'}});
@@ -9,6 +10,7 @@ export async function POST(request:Request){
  try{const raw=await request.text();if(raw.length>2000)return reply({error:'Invalid request.'},413);const b=JSON.parse(raw),config=wordpressConfig();if(!config)return reply({error:'Connect the WordPress destination first.'},409);const wp=new WordPressClient(config);
  if(b.action==='check'){await wp.check();return reply({message:'WordPress account connection succeeded.'});}
  if(!['send','publish'].includes(b.action)||!Number.isInteger(b.revision))return reply({error:'Invalid publishing action.'},400);
+ const {data:draft,error:draftError}=await c.db.from('editorial_drafts').select('body').eq('workspace_id',c.w.id).eq('id',b.id).eq('revision',b.revision).single();if(draftError||!draft)return reply({error:'This draft changed. Refresh before publishing.'},409);const lengthError=articleLengthError(draft.body);if(lengthError)return reply({error:lengthError},409);
  const reserved=await c.db.rpc('reserve_wordpress_delivery',{p_draft:b.id,p_revision:b.revision,p_action:b.action});if(reserved.error)return reply({error:'Could not reserve this approved revision. A transfer may already exist. Refresh the publishing desk.'},409);
  const delivery=reserved.data;let post;
  try{post=b.action==='send'?await wp.createDraft(delivery.draft_id,delivery.headline,delivery.body):await wp.publish(delivery.wordpress_id);}catch(e){await c.db.rpc('finish_wordpress_delivery',{p_id:delivery.id,p_state:'uncertain',p_post:null,p_url:null,p_remote:null,p_message:'Transfer outcome needs checking in WordPress. Do not resend.'});throw e;}
