@@ -1,6 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
-function tur_areas(){return array('CR0'=>'CR0 · Croydon','CR2'=>'CR2 · South Croydon','CR3'=>'CR3 · Caterham / Coulsdon','CR5'=>'CR5 · Coulsdon','CR6'=>'CR6 · Warlingham','CR7'=>'CR7 · Thornton Heath','CR8'=>'CR8 · Purley','CR9'=>'CR9 · Croydon');}
+function tur_areas(){return array('CR0'=>'CR0 · Croydon','CR2'=>'CR2 · South Croydon','CR3'=>'CR3','CR5'=>'CR5 · Coulsdon','CR6'=>'CR6 · Warlingham','CR7'=>'CR7 · Thornton Heath','CR8'=>'CR8 · Purley','CR9'=>'CR9 · Croydon');}
 function tur_topics(){return array('planning'=>'Planning','whats-on'=>'What’s on','business'=>'Business','schools'=>'Schools','sport'=>'Sport','community'=>'Community');}
 function tur_clean_preferences($raw){
  $raw=is_array($raw)?$raw:array();$home=is_string($raw['home']??null)?$raw['home']:'';

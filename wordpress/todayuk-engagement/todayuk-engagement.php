@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TodayUK Engagement
  * Description: One configurable engine for article reactions, polls, follows and private reader responses.
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: TodayUK
  */
 if (!defined('ABSPATH')) exit;
