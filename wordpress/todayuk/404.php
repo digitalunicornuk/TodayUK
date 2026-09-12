@@ -1,0 +1,1 @@
+<?php get_header(); ?><main class="wrap" id="main"><div class="empty"><p class="eyebrow">Page not found</p><h1>Let’s get you back to the news.</h1><p>This page may have moved. Search for a story or return to the homepage.</p><?php get_search_form(); ?><p><a href="<?php echo esc_url(home_url('/')); ?>">Back to TodayUK →</a></p></div></main><?php get_footer(); ?>

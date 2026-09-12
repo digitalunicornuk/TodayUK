@@ -1,0 +1,1 @@
+<form role="search" method="get" class="search-form" action="<?php echo esc_url(home_url('/')); ?>"><label><span class="screen-reader-text" style="position:absolute;clip:rect(1px,1px,1px,1px)">Search stories</span><input type="search" placeholder="Search stories" value="<?php echo esc_attr(get_search_query()); ?>" name="s"></label><button type="submit">Search</button></form>

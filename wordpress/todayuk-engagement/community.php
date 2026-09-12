@@ -15,7 +15,7 @@ add_action('admin_init',function(){
 add_action('wp_body_open',function(){echo '<nav class="tur-account-link" aria-label="Community"><a href="'.esc_url(tuc_url()).'">Local life</a> · <a href="'.esc_url(tuc_url('submit')).'">Send a story</a> · <a href="'.esc_url(tuc_url('quiz')).'">Weekly quiz</a></nav>';});
 add_action('template_redirect',function(){
  if(!isset($_GET['todayuk']))return;$page=sanitize_key($_GET['todayuk']);if(!in_array($page,array('local','submit','quiz'),true))return;
- status_header(200);nocache_headers();if($page!=='local')header('X-Robots-Tag: noindex, nofollow');get_header();echo '<main class="wrap"><section class="tue tur">';
+ status_header(200);nocache_headers();if($page!=='local')header('X-Robots-Tag: noindex, nofollow');get_header();echo '<main id="main" class="wrap"><section class="tue tur">';
  if($page==='submit')tuc_submit_page();elseif($page==='quiz')tuc_quiz_page();else tuc_local_page();echo '</section></main>';get_footer();exit;
 });
 function tuc_signed_in(){if(is_user_logged_in())return true;echo '<p><a class="tur-primary" href="'.esc_url(wp_login_url(tuc_url(sanitize_key($_GET['todayuk']??'local')))).'">Sign in to take part</a> <a href="'.esc_url(tur_url()).'">Create an account</a></p>';return false;}
