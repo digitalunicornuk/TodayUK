@@ -56,9 +56,9 @@ export async function POST(request:Request){
      if(heading.error)throw new Error('Could not load the draft headline.');
      const sourceText=(story.original_text||'').replace(/\s*The post [\s\S]*? appeared first on [\s\S]*$/i,'').trim();
      const body=sourceText+(story.original_url?'\n\nSource: '+story.original_url:'');
-     const created=await db.from('editorial_drafts').upsert({id:groupId,workspace_id:w.id,group_id:groupId,headline:heading.data.title,body,risk_notes:'Automatically prepared from retained source material. This is a source-based starter, not a verified or fully researched article. Check the full source, attribution, dates, completeness and rights before approval.'},{onConflict:'id',ignoreDuplicates:true});
+     const created=await db.from('editorial_drafts').insert({workspace_id:w.id,group_id:groupId,headline:heading.data.title,body}).select('id').single();
      if(created.error)throw new Error('Story shortlisted, but its draft could not be created. Click Continue story to retry.');
-     draftId=groupId;
+     draftId=created.data.id;
     }
    }
    return reply({message:draftId?'Draft ready. Opening your story…':'Shortlisted. Your research file is ready.',group_id:groupId,draft_id:draftId});
