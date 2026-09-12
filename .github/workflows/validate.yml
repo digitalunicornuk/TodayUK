@@ -15,6 +15,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: php -l wordpress/todayuk-engagement/todayuk-engagement.php && php -l wordpress/todayuk-engagement/catalog.php && php tests/engagement.php
       - run: node tests/database.test.mjs
       - run: node tests/discovery.test.mjs
       - run: node tests/feed.test.mjs
