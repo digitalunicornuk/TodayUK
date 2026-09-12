@@ -14,5 +14,9 @@ await client.createDraft('10000000-0000-4000-8000-000000000001','Headline','Body
 await client.publish(42);assert.deepEqual(JSON.parse(sent.opts.body),{status:'publish'});await assert.rejects(client.publish(-1));
 let missingWrites=0;const missingCategory=new WordPressClient({url:'https://news.example',username:'editor',password:'secret'},async(url,opts)=>{if(opts.method==='POST')missingWrites++;return Response.json([]);});await assert.rejects(missingCategory.createDraft('10000000-0000-4000-8000-000000000001','Headline','Body'),/CR News category/);assert.equal(missingWrites,0);
 const redirect=new WordPressClient({url:'https://news.example',username:'editor',password:'secret'},async()=>new Response(null,{status:302,headers:{Location:'https://other.example'}}));await assert.rejects(redirect.check(),/request failed/);
+for(const [status,payload,expected] of [[401,null,/hosting gateway blocked API access/],[403,null,/hosting gateway blocked API access/],[401,{code:'incorrect_password',message:'secret'},/did not accept/],[401,{code:'rest_not_logged_in'},/without an authenticated user/],[403,{code:'rest_cannot_edit'},/account permissions/]]){
+ const failed=new WordPressClient({url:'https://news.example',username:'editor',password:'secret'},async()=>payload?Response.json(payload,{status}):new Response('',{status}));
+ await assert.rejects(failed.check(),e=>expected.test(e.message)&&!e.message.includes('secret'));
+}
 console.log('WordPress client checks passed: HTTPS, draft-first sends, escaped content, explicit publication, redirects and invalid post IDs.');
 }finally{await unlink(path);}

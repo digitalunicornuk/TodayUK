@@ -13,7 +13,18 @@ export class WordPressClient{
  private async request(path:string,body?:Record<string,unknown>):Promise<unknown>{
   let response:Response;
   try{response=await this.transport(this.config.url+'/wp-json/wp/v2/'+path,{method:body?'POST':'GET',redirect:'manual',signal:AbortSignal.timeout(20000),headers:{Authorization:'Basic '+btoa(String.fromCharCode(...new TextEncoder().encode(this.config.username+':'+this.config.password))),'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});}catch{throw Error('WordPress did not respond. Check its posts before retrying a send.');}
-  if(!response.ok)throw Error(response.status===401||response.status===403?'WordPress rejected the connection or publishing permission.':'WordPress request failed. Check its posts before retrying a send.');
+  if(!response.ok){
+   // Never relay response bodies: a gateway or plugin can echo sensitive request data.
+   let code='';try{const error=await response.json() as {code?:unknown};if(typeof error.code==='string')code=error.code;}catch{}
+   if(['incorrect_password','invalid_username','invalid_email'].includes(code))throw Error('WordPress did not accept the saved username or application password. Check the connection settings.');
+   if(['application_passwords_disabled','application_passwords_disabled_for_user'].includes(code))throw Error('WordPress application-password access is disabled. Ask the hosting administrator to check it.');
+   if(code==='rest_not_logged_in')throw Error('WordPress received the request without an authenticated user. Ask the host to check application-password authentication and the Authorization header.');
+   if(response.status===401||response.status===403){
+    if(!code)throw Error('The website or hosting gateway blocked API access (HTTP '+response.status+'). This does not confirm an incorrect password. Ask GoDaddy to check REST API access on this temporary domain.');
+    throw Error('WordPress refused this API operation (HTTP '+response.status+'). Check the account permissions and security-plugin restrictions.');
+   }
+   throw Error('WordPress request failed (HTTP '+response.status+'). Check its posts before retrying a send.');
+  }
   return response.json();
  }
  async check(){const user=await this.request('users/me?context=edit') as {id?:number};if(!Number.isInteger(user.id))throw Error('WordPress returned an invalid account.');return true;}
