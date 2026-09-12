@@ -9,9 +9,9 @@ async function context(){
  return {db,w,role:m?.role};
 }
 export async function GET(){const c=await context();if(!c)return reply({error:'Sign in with an approved newsroom account.'},401);
- const results=await Promise.all([c.db.from('news_sources').select('*').eq('workspace_id',c.w.id).order('name'),c.db.from('incoming_stories').select('*').eq('workspace_id',c.w.id).order('received_at',{ascending:false}).limit(200),c.db.from('source_fetches').select('*').eq('workspace_id',c.w.id).order('fetched_at',{ascending:false}).limit(20)]);
+ const results=await Promise.all([c.db.from('news_sources').select('*').eq('workspace_id',c.w.id).order('name'),c.db.from('incoming_stories').select('*').eq('workspace_id',c.w.id).order('published_at',{ascending:false,nullsFirst:false}).order('received_at',{ascending:false}).limit(200),c.db.from('source_fetches').select('*').eq('workspace_id',c.w.id).order('fetched_at',{ascending:false}).limit(20),c.db.from('story_pitches').select('*').eq('workspace_id',c.w.id).limit(500)]);
  if(results.some(r=>r.error))return reply({error:'Discovery is not available yet. Please retry shortly.'},503);
- return reply({sources:results[0].data,stories:results[1].data,fetches:results[2].data,role:c.role});
+ return reply({sources:results[0].data,stories:results[1].data,fetches:results[2].data,pitches:results[3].data,role:c.role});
 }
 export async function POST(request:Request){
  if(request.headers.get('origin')!=='https://todayuk-newsroom.digitalunicorn.chatgpt.site')return reply({error:'Request origin not allowed.'},403);
@@ -20,6 +20,11 @@ export async function POST(request:Request){
  let body;try{const text=await request.text();if(text.length>210000)return reply({error:'Submission is too large.'},413);body=JSON.parse(text);}catch{return reply({error:'Invalid submission.'},400);}
  const {db,w,role}=c;
  try{
+  if(body.action==='pitch'){
+   const headline=String(body.headline??'').trim(),alternative=String(body.alternative??'').trim(),reader_value=String(body.reader_value??'').trim(),reporting_questions=String(body.reporting_questions??'').trim();
+   if(!headline||headline.length>500||alternative.length>500||reader_value.length>2000||reporting_questions.length>4000)return reply({error:'Check the headline and note lengths.'},400);
+   const fields={headline,alternative,reader_value,reporting_questions};const existing=await db.from('story_pitches').select('story_id').eq('workspace_id',w.id).eq('story_id',body.id).maybeSingle();if(existing.error)throw new Error('Could not load headline ideas.');const r=existing.data?await db.from('story_pitches').update(fields).eq('workspace_id',w.id).eq('story_id',body.id).select('story_id').single():await db.from('story_pitches').insert({workspace_id:w.id,story_id:body.id,...fields});if(r.error)throw new Error('Could not save the headline ideas.');return reply({message:'Headline ideas saved. Original source unchanged.'});
+  }
   if(body.action==='triage'){
    if(!['new','shortlisted','dismissed'].includes(body.status))return reply({error:'Choose a valid queue status.'},400);
    const r=await db.from('incoming_stories').update({status:body.status}).eq('workspace_id',w.id).eq('id',body.id).select('id').single();if(r.error)throw new Error('Could not update this story.');return reply({message:'Story updated.'});
