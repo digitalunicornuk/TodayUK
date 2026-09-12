@@ -25,7 +25,7 @@ function tue_suggest($text) {
  if(preg_match('/planning|development|infrastructure levy|housing proposal/i',$text)) $tools[]='nimby';
  if(preg_match('/festival|concert|event|harvest|what.s on/i',$text)) $tools[]='attendance';
  if(preg_match('/missing|lost pet|lost cat|lost dog|found pet|lost property/i',$text)) { $tools[]='seen'; $tools[]='mine'; }
- if(preg_match('/business opening|new shop|restaurant opens|directory/i',$text)) $tools[]='claim';
+ if(preg_match('/business opening|new shop|restaurant opens|business directory/i',$text)) $tools[]='claim';
  return array_values(array_unique($tools));
 }
 function tue_clean_config($raw) {

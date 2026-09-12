@@ -94,20 +94,20 @@ add_filter('the_content',function($content){
  foreach($c['tools']as $tool){$spec=tue_catalog()[$tool];$kind=$spec[1];$scope=tue_scope($id,$tool,$c);
  $mine=$uid?$wpdb->get_row($wpdb->prepare("SELECT value FROM $table WHERE user_id=%d AND tool=%s AND scope=%s",$uid,$tool,$scope)):null;
  $label=$spec[0];if($tool==='poll')$label=$c['question'];if(strpos($tool,'follow_')===0)$label.=': '.$c[substr($tool,7)];
- echo '<div class="tue-tool"><h3>'.esc_html($label).'</h3>';
+ echo $kind==='message'?'<details class="tue-tool"><summary>'.esc_html($label).'</summary>':'<div class="tue-tool"><h3>'.esc_html($label).'</h3>';
  if($kind==='share'){echo '<button type="button" class="tue-share" data-url="'.esc_url(get_permalink($id)).'" data-title="'.esc_attr(get_the_title($id)).'">Share this story</button><p class="tue-share-status" role="status"></p>';}
  elseif($kind==='reminder'){echo '<p>Add '.esc_html($c['event_date']).' to your calendar.</p><a href="'.esc_url(add_query_arg(array('action'=>'tue_calendar','post_id'=>$id),admin_url('admin-post.php'))).'">Download calendar reminder</a>';}
  else{
  if($uid){echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';tue_hidden($id,$tool,$c);
  if($kind==='choice'){echo '<fieldset><legend class="screen-reader-text">'.esc_html($label).'</legend>';foreach(tue_choices($tool,$c)as $k=>$label2)echo '<label><input type="radio" name="value" value="'.esc_attr($k).'" '.checked($mine?$mine->value:null,(string)$k,false).' required> '.esc_html($label2).'</label>';echo '</fieldset><button>Save answer</button>';}
  elseif($kind==='message')echo '<label>Private message to the newsroom<textarea name="value" minlength="5" maxlength="2000" required rows="3">'.esc_textarea($mine?$mine->value:'').'</textarea></label><p>Your message is not published or sent to another reader. Do not include passwords or bank details.</p><button>Send to newsroom</button>';
- else echo '<button>'.($mine?'Saved ✓':'Save').'</button>';
+ else echo '<button>'.($mine?'Saved ✓':esc_html($label)).'</button>';
  if($mine)echo ' <button name="remove" value="1" formnovalidate>Remove my response</button>';
  echo '</form>';}
  if($kind==='choice'){ $rows=$wpdb->get_results($wpdb->prepare("SELECT value,COUNT(*) total FROM $table WHERE tool=%s AND scope=%s GROUP BY value",$tool,$scope),OBJECT_K);echo '<ul class="tue-results">';foreach(tue_choices($tool,$c)as $k=>$v)echo '<li>'.esc_html($v).': '.absint(isset($rows[$k])?$rows[$k]->total:0).'</li>';echo '</ul><small>Reader responses; not a representative survey.</small>';}
- if($tool==='track'||strpos($tool,'follow_')===0)echo '<p>Saved to your reading list. Email and push alerts are not enabled.</p>';
+ if($tool==='track'||strpos($tool,'follow_')===0)echo '<p>'.($mine?'Saved to your reading list.':'Keep this in your reading list.').' Email and push alerts are not enabled.</p>';
  }
- echo '</div>';}
+ echo $kind==='message'?'</details>':'</div>';}
  if($uid)echo '<p><a href="'.esc_url(admin_url('profile.php#tue-saved')).'">My saved stories and follows →</a></p>';
  echo '</section>';return $content.ob_get_clean();
 },30);
