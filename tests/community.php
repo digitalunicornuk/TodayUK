@@ -1,0 +1,5 @@
+<?php
+define('ABSPATH',__DIR__);require __DIR__.'/../wordpress/todayuk-engagement/community-model.php';
+function v($b,$m){if(!$b)throw new Exception($m);}
+v(tuc_detect('Free sofa, collection only')==='free','Free items classification');v(tuc_detect('Prize draw giveaway')==='competition','Commercial giveaways separate');v(tuc_detect('Lost dog in Purley')==='lost','Lost property');v(tuc_detect('An ordinary tip')==='news','Fallback');
+$q=tuc_quiz_parse("news | Which? | A | B | C | D | 2\nlocal | Where? | E | F | G | H | 1");v(count($q)===2,'Valid mixed quiz');v(tuc_quiz_score($q,array('1','0'))===2,'Correct grading');v(tuc_quiz_score($q,array('0','0'))===1,'Wrong answer grading');v(tuc_quiz_score($q,array('1'))===false,'Incomplete rejected');v(tuc_quiz_score($q,array('9','0'))===false,'Invalid choices rejected');v(tuc_quiz_parse('news | Which? | A | B | C | D | 2')===false,'Requires mix');v(tuc_quiz_parse("news | Which? | A | A | C | D | 2\nlocal | Where? | E | F | G | H | 1")===false,'Distinct answers');echo "Contributor classification and quiz checks passed\n";

@@ -11,10 +11,10 @@ add_action('template_redirect',function(){
 });
 add_action('wp_body_open',function(){echo '<div class="tur-account-link"><a href="'.esc_url(tur_url()).'">'.(is_user_logged_in()?'My TodayUK':'Join / sign in').'</a></div>';});
 add_action('wp_enqueue_scripts',function(){
- wp_enqueue_style('tur',plugins_url('reader.css',__FILE__),array(),'1.2.0');
- if(isset($_GET['todayuk_reader']))wp_enqueue_style('tue',plugins_url('style.css',__FILE__),array(),'1.2.0');
+ wp_enqueue_style('tur',plugins_url('reader.css',__FILE__),array(),'1.3.0');
+ if(isset($_GET['todayuk_reader']))wp_enqueue_style('tue',plugins_url('style.css',__FILE__),array(),'1.3.0');
  if(is_singular('post')&&is_user_logged_in()&&tur_preferences(get_current_user_id())['remember']){
-  wp_enqueue_script('tur-reading',plugins_url('reader.js',__FILE__),array(),'1.2.0',true);
+  wp_enqueue_script('tur-reading',plugins_url('reader.js',__FILE__),array(),'1.3.0',true);
   wp_localize_script('tur-reading','todayukReading',array('url'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('tur-reading'),'post'=>get_the_ID()));
  }
 });
