@@ -10,5 +10,6 @@ try{const {articleWordCount,articleLengthError}=await import(path.href);
  assert.ok(articleLengthError('word '.repeat(399)));assert.equal(articleLengthError('word '.repeat(400)),null);
  assert.ok(articleLengthError('word '.repeat(399)+'\nSources\n'+'citation '.repeat(500)));
  for(const route of ['editorial','publishing'])assert.match(await readFile(new URL('../app/api/'+route+'/route.ts',import.meta.url),'utf8'),/articleLengthError\(/);
+ const riskCode=ts.transpileModule(await readFile(new URL('../lib/editorial/risk.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;const {suggestedEditorialRisk}=await import('data:text/javascript;base64,'+Buffer.from(riskCode).toString('base64'));assert.equal(suggestedEditorialRisk('School visits support pupils'),'sensitive');assert.equal(suggestedEditorialRisk('Zodiac House evacuated after outage'),'sensitive');assert.equal(suggestedEditorialRisk('New restaurant opens in town'),'standard');
  console.log('400-word boundary and source exclusion passed; both server routes enforce length.');
 }finally{await unlink(path);}
