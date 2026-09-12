@@ -11,7 +11,23 @@ async function context(){
 export async function GET(){const c=await context();if(!c)return reply({error:'Sign in with an approved newsroom account.'},401);
  const results=await Promise.all([c.db.from('news_sources').select('*').eq('workspace_id',c.w.id).order('name'),c.db.from('incoming_stories').select('*').eq('workspace_id',c.w.id).order('published_at',{ascending:false,nullsFirst:false}).order('received_at',{ascending:false}).limit(200),c.db.from('source_fetches').select('*').eq('workspace_id',c.w.id).order('fetched_at',{ascending:false}).limit(20),c.db.from('story_pitches').select('*').eq('workspace_id',c.w.id).limit(500)]);
  if(results.some(r=>r.error))return reply({error:'Discovery is not available yet. Please retry shortly.'},503);
- return reply({sources:results[0].data,stories:results[1].data,fetches:results[2].data,pitches:results[3].data,role:c.role});
+ const stories=results[1].data??[];
+ const published=new Map<string,string>();
+ if(stories.length){
+  const links=await c.db.from('story_group_items').select('story_id,group_id').eq('workspace_id',c.w.id).in('story_id',stories.map(s=>s.id));
+  if(links.error)return reply({error:'Could not check published stories. Please refresh.'},503);
+  const groupIds=[...new Set((links.data??[]).map(l=>l.group_id))];
+  if(groupIds.length){
+   const drafts=await c.db.from('editorial_drafts').select('id,group_id').eq('workspace_id',c.w.id).in('group_id',groupIds);
+   if(drafts.error)return reply({error:'Could not check published stories. Please refresh.'},503);
+   if(drafts.data?.length){
+    const deliveries=await c.db.from('wordpress_deliveries').select('draft_id,wordpress_url').eq('workspace_id',c.w.id).eq('state','publish').in('draft_id',drafts.data.map(d=>d.id));
+    if(deliveries.error)return reply({error:'Could not check published stories. Please refresh.'},503);
+    for(const delivery of deliveries.data??[]){const group=drafts.data.find(d=>d.id===delivery.draft_id)?.group_id;for(const link of links.data??[])if(link.group_id===group)published.set(link.story_id,delivery.wordpress_url);}
+   }
+  }
+ }
+ return reply({sources:results[0].data,stories:stories.map(s=>published.has(s.id)?{...s,status:'published',wordpress_url:published.get(s.id)}:s),fetches:results[2].data,pitches:results[3].data,role:c.role});
 }
 export async function POST(request:Request){
  if(request.headers.get('origin')!=='https://todayuk-newsroom.digitalunicorn.chatgpt.site')return reply({error:'Request origin not allowed.'},403);
