@@ -15,7 +15,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: php -l wordpress/todayuk-engagement/todayuk-engagement.php && php -l wordpress/todayuk-engagement/catalog.php && php -l wordpress/todayuk-engagement/readers.php && php -l wordpress/todayuk-engagement/reader-model.php && php tests/engagement.php && php tests/readers.php && php -l wordpress/todayuk-engagement/community.php && php -l wordpress/todayuk-engagement/community-model.php && php -l wordpress/todayuk-engagement/quiz.php && php tests/community.php && php -l wordpress/todayuk-engagement/launch.php && php -l wordpress/todayuk-engagement/launch-model.php && php tests/launch.php
+      - run: php -l wordpress/todayuk-engagement/todayuk-engagement.php && php -l wordpress/todayuk-engagement/catalog.php && php -l wordpress/todayuk-engagement/readers.php && php -l wordpress/todayuk-engagement/reader-model.php && php tests/engagement.php && php tests/readers.php && php -l wordpress/todayuk-engagement/community.php && php -l wordpress/todayuk-engagement/community-model.php && php -l wordpress/todayuk-engagement/quiz.php && php tests/community.php && php -l wordpress/todayuk-engagement/launch.php && php -l wordpress/todayuk-engagement/launch-model.php && php tests/launch.php && php -l wordpress/todayuk-engagement/social.php
       - run: find wordpress/todayuk -name "*.php" -print0 | xargs -0 -n1 php -l
       - run: node --check wordpress/todayuk/assets/home.js && node --check wordpress/todayuk-engagement/gam.js
       - run: node tests/database.test.mjs

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TodayUK Engagement
  * Description: One configurable engine for article reactions, polls, follows and private reader responses.
- * Version: 1.4.1
+ * Version: 1.5.0
  * Author: TodayUK
  */
 if (!defined('ABSPATH')) exit;
@@ -11,6 +11,7 @@ require_once __DIR__.'/readers.php';
 require_once __DIR__.'/community.php';
 require_once __DIR__.'/quiz.php';
 require_once __DIR__.'/launch.php';
+require_once __DIR__.'/social.php';
 function tue_table(){global $wpdb; return $wpdb->prefix.'todayuk_engagement';}
 register_activation_hook(__FILE__,function(){
  global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';
